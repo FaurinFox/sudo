@@ -2,7 +2,7 @@
 .\"
 .\" SPDX-License-Identifier: ISC
 .\"
-.\" Copyright (c) 1994-1996, 1998-2005, 2007-2024
+.\" Copyright (c) 1994-1996, 1998-2005, 2007-2023
 .\"	Todd C. Miller <Todd.Miller@sudo.ws>
 .\"
 .\" Permission to use, copy, modify, and distribute this software for any
@@ -25,7 +25,7 @@
 .nr BA @BAMAN@
 .nr LC @LCMAN@
 .nr PS @PSMAN@
-.TH "SUDOERS" "@mansectform@" "March 9, 2024" "Sudo @PACKAGE_VERSION@" "File Formats Manual"
+.TH "SUDOERS" "@mansectform@" "December 19, 2023" "Sudo @PACKAGE_VERSION@" "File Formats Manual"
 .nh
 .if n .ad l
 .SH "NAME"
@@ -292,14 +292,6 @@ The
 option can be used to select the type of time stamp record
 \fBsudoers\fR
 will use.
-.PP
-The
-\fBtsdump\fR
-utility, included with the sudo source distribution, can be used to
-display the contents of a time stamp file.
-See
-sudoers_timestamp(@mansectform@)
-for details of the time stamp file format.
 .SS "Logging"
 By default,
 \fBsudoers\fR
@@ -4288,14 +4280,6 @@ user's terminal device even after the main program has finished
 executing.
 By running the command in a separate pseudo-terminal, this attack is
 no longer possible.
-.sp
-A side effect of running the command in a new pseudo-terminal is
-that input will be passed to the command even if it is non-interactive.
-This means that, for example, keys pressed while a non-interactive
-command is running will be consumed by
-\fBsudo\fR
-instead of being passed to the shell after the command exits.
-.sp
 This flag is
 \fIon\fR
 by default for
@@ -4514,19 +4498,6 @@ entries by specifying the
 option.
 This option is only available when sudo is built with AppArmor
 support.
-.TP 18n
-cmddenial_message
-.br
-It set,
-\fBsudo\fR
-will display this message when a user is denied access to run the
-specified command, but is listed in the
-\fIsudoers\fR
-file for the host.
-This can be used to provide additional, site-specific information
-to the user when a command is denied by the security policy.
-It does not override the standard warning the user receives when
-a command is denied.
 .TP 18n
 authfail_message
 Message that is displayed after a user fails to authenticate.
@@ -5381,45 +5352,18 @@ Supported log formats are:
 .PD 0
 .TP 6n
 json
-Currently, this is an alias for
-\fIjson_pretty\fR.
-In a future version of
-\fBsudo\fR,
-\fIjson\fR
-will be equivalent to
-\fIjson_compact\fR.
+Logs in JSON format.
 JSON log entries contain the full user details as well as the execution
 environment if the command was allowed.
-.PD
-.TP 6n
-json_compact
-Log events in
-\(lqcompact\(rq
-(minified) JSON format.
-Each event is written as a separate JSON object on single line without
-extraneous white space.
 Due to limitations of the protocol, JSON events sent via
 \fIsyslog\fR
 may be truncated.
-.TP 6n
-json_pretty
-Log events in
-\(lqpretty\(rq
-JSON format.
-When logging to a file, the entire file is treated as a single JSON
-object consisting of multiple events, each event spanning multiple lines.
-When logging via
-\fIsyslog\fR,
-there is no difference between the
-\fIjson_pretty\fR
-and
-\fIjson_compact\fR
-formats.
+.PD
 .TP 6n
 sudo
-Log events in traditional sudo-style format, see
+Traditional sudo-style logs, see
 \fIEVENT LOGGING\fR
-for details.
+for a description of the log file format.
 .PP
 This setting affects logs sent via
 syslog(3)

@@ -119,6 +119,11 @@ sudoers_policy_deserialize_info(struct sudoers_context *ctx, void *v,
     } \
 } while (0)
 
+    if (sudo_gettime_real(&ctx->submit_time) == -1) {
+	sudo_warn("%s", U_("unable to get time of day"));
+	goto bad;
+    }
+
     /* Parse sudo.conf plugin args. */
     if (info->plugin_args != NULL) {
 	for (cur = info->plugin_args; *cur != NULL; cur++) {
@@ -232,7 +237,7 @@ sudoers_policy_deserialize_info(struct sudoers_context *ctx, void *v,
 	    continue;
 	}
 	if (MATCHES(*cur, "prompt=")) {
-	    /* Allow empty prompt. */
+	    /* Allow epmpty prompt. */
 	    ctx->user.prompt = *cur + sizeof("prompt=") - 1;
 	    if (!append_default("passprompt_override", NULL, true, NULL, defaults))
 		goto oom;
@@ -410,7 +415,6 @@ sudoers_policy_deserialize_info(struct sudoers_context *ctx, void *v,
     ctx->user.gid = (gid_t)-1;
     ctx->user.uid = (gid_t)-1;
     ctx->user.umask = (mode_t)-1;
-    ctx->user.ttydev = (dev_t)-1;
     for (cur = info->user_info; *cur != NULL; cur++) {
 	if (MATCHES(*cur, "user=")) {
 	    CHECK(*cur, "user=");
@@ -475,21 +479,6 @@ sudoers_policy_deserialize_info(struct sudoers_context *ctx, void *v,
 	    ctx->user.tty = ctx->user.ttypath;
 	    if (strncmp(ctx->user.tty, _PATH_DEV, sizeof(_PATH_DEV) - 1) == 0)
 		ctx->user.tty += sizeof(_PATH_DEV) - 1;
-	    continue;
-	}
-	if (MATCHES(*cur, "ttydev=")) {
-	    unsigned long long ullval;
-	    char *ep;
-
-	    p = *cur + sizeof("ttydev=") - 1;
-	    errno = 0;
-	    ullval = strtoull(p, &ep, 10);
-	    if ((*p == '\0' || *ep != '\0') ||
-		    (errno == ERANGE && ullval == ULLONG_MAX)) {
-		INVALID("ttydev=");
-		goto bad;
-	    }
-	    ctx->user.ttydev = (dev_t)ullval;
 	    continue;
 	}
 	if (MATCHES(*cur, "host=")) {
@@ -603,15 +592,6 @@ sudoers_policy_deserialize_info(struct sudoers_context *ctx, void *v,
 	    free(gids);
 	    goto bad;
 	}
-    }
-
-    /* ttydev is only set in user_info[] for API 1.22 and above. */
-    if (ctx->user.ttydev == (dev_t)-1 && ctx->user.ttypath != NULL) {
-	struct stat sb;
-	if (stat(ctx->user.ttypath, &sb) == 0)
-	    ctx->user.ttydev = sb.st_rdev;
-	else
-	    sudo_warn("%s", ctx->user.ttypath);
     }
 
     /* umask is only set in user_info[] for API 1.10 and above. */
@@ -1066,14 +1046,6 @@ sudoers_policy_store_result(struct sudoers_context *ctx, bool accepted,
 	    goto oom;
     }
 #endif /* HAVE_PRIV_SET */
-
-    /* Set command start time (monotonic) for the first accepted command. */
-    if (accepted && !ISSET(ctx->mode, MODE_POLICY_INTERCEPTED)) {
-	if (sudo_gettime_awake(&ctx->start_time) == -1) {
-	    sudo_warn("%s", U_("unable to get time of day"));
-	    goto bad;
-	}
-    }
 
     /* Fill in exec environment info. */
     *(exec_args->argv) = argv;

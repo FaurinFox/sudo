@@ -44,19 +44,17 @@ new_member(const char *name, short type)
 
     m = calloc(1, sizeof(struct member));
     if (m == NULL)
-	goto oom;
+	sudo_fatalx(U_("%s: %s"), __func__, U_("unable to allocate memory"));
     if (name != NULL) {
 	m->name = strdup(name);
-	if (m->name == NULL)
-	    goto oom;
+	if (m->name == NULL) {
+	    sudo_fatalx(U_("%s: %s"), __func__,
+		U_("unable to allocate memory"));
+	}
     }
     m->type = type;
 
     debug_return_ptr(m);
-oom:
-    sudo_warnx(U_("%s: %s"), __func__, U_("unable to allocate memory"));
-    free(m);
-    debug_return_ptr(NULL);
 }
 
 /*
@@ -240,7 +238,7 @@ member_list_equivalent(struct member_list *ml1, struct member_list *ml2)
  * If a host list contains all hosts in bound_hosts, replace them with
  * "ALL".  Also prune hosts on either side of "ALL" when possible.
  */
-static bool
+static void
 simplify_host_list(struct member_list *hosts, const char *file, int line,
     int column, struct member_list *bound_hosts)
 {
@@ -292,8 +290,6 @@ simplify_host_list(struct member_list *hosts, const char *file, int line,
 		}
 	    }
 	    m = new_member(NULL, ALL);
-	    if (m == NULL)
-		debug_return_bool(false);
 	    TAILQ_INSERT_TAIL(hosts, m, entries);
 	}
     }
@@ -320,7 +316,7 @@ simplify_host_list(struct member_list *hosts, const char *file, int line,
 	}
     }
 
-    debug_return_bool(true);
+    debug_return;
 }
 
 /*
@@ -353,10 +349,8 @@ alias_make_unique(const char *old_name, short type,
     for (;;) {
 	suffix++;
 	free(new_name);
-	if (asprintf(&new_name, "%.*s_%lld", (int)namelen, old_name, suffix) == -1) {
-	    sudo_warnx(U_("%s: %s"), __func__, U_("unable to allocate memory"));
-	    debug_return_ptr(NULL);
-	}
+	if (asprintf(&new_name, "%.*s_%lld", (int)namelen, old_name, suffix) == -1)
+	    sudo_fatalx(U_("%s: %s"), __func__, U_("unable to allocate memory"));
 	/* Make sure new_name is not already in use. */
 	a = alias_get(merged_tree, new_name, type);
 	if (a != NULL) {
@@ -401,10 +395,8 @@ alias_rename_members(struct sudoers_parse_tree *parse_tree, struct alias *a,
     TAILQ_FOREACH(m, &a->members, entries) {
 	if (m->type == ALIAS && strcmp(m->name, closure->old_name) == 0) {
 	    char *copy = strdup(closure->new_name);
-	    if (copy == NULL) {
-		sudo_warnx(U_("%s: %s"), __func__, U_("unable to allocate memory"));
-		debug_return_int(-1);
-	    }
+	    if (copy == NULL)
+		sudo_fatalx(U_("%s: %s"), __func__, U_("unable to allocate memory"));
 	    free(m->name);
 	    m->name = copy;
 	}
@@ -413,7 +405,7 @@ alias_rename_members(struct sudoers_parse_tree *parse_tree, struct alias *a,
     debug_return_int(0);
 }
 
-static bool
+static void
 alias_rename_defaults(const char *old_name, const char *new_name,
     short alias_type, struct defaults_list *defaults)
 {
@@ -450,9 +442,8 @@ alias_rename_defaults(const char *old_name, const char *new_name,
 	    if (strcmp(m->name, old_name) == 0) {
 		char *copy = strdup(new_name);
 		if (copy == NULL) {
-		    sudo_warnx(U_("%s: %s"), __func__,
+		    sudo_fatalx(U_("%s: %s"), __func__,
 			U_("unable to allocate memory"));
-		    debug_return_bool(false);
 		}
 		free(m->name);
 		m->name = copy;
@@ -460,10 +451,10 @@ alias_rename_defaults(const char *old_name, const char *new_name,
 	}
     }
 
-    debug_return_bool(true);
+    debug_return;
 }
 
-static bool
+static void
 alias_rename_member(const char *old_name, const char *new_name,
     struct member *m)
 {
@@ -472,18 +463,17 @@ alias_rename_member(const char *old_name, const char *new_name,
     if (m->type == ALIAS && strcmp(m->name, old_name) == 0) {
 	char *copy = strdup(new_name);
 	if (copy == NULL) {
-	    sudo_warnx(U_("%s: %s"), __func__,
+	    sudo_fatalx(U_("%s: %s"), __func__,
 		U_("unable to allocate memory"));
-	    debug_return_bool(false);
 	}
 	free(m->name);
 	m->name = copy;
     }
 
-    debug_return_bool(true);
+    debug_return;
 }
 
-static bool
+static void
 alias_rename_member_list(const char *old_name, const char *new_name,
     struct member_list *members)
 {
@@ -491,11 +481,10 @@ alias_rename_member_list(const char *old_name, const char *new_name,
     debug_decl(alias_rename_member_list, SUDOERS_DEBUG_ALIAS);
 
     TAILQ_FOREACH(m, members, entries) {
-	if (!alias_rename_member(old_name, new_name, m))
-	    debug_return_bool(false);
+	alias_rename_member(old_name, new_name, m);
     }
 
-    debug_return_bool(true);
+    debug_return;
 }
 
 static bool
@@ -505,57 +494,45 @@ alias_rename_userspecs(const char *old_name, const char *new_name,
     struct privilege *priv;
     struct cmndspec *cs;
     struct userspec *us;
+    bool ret = true;
     debug_decl(alias_rename_userspecs, SUDOERS_DEBUG_ALIAS);
 
     TAILQ_FOREACH(us, userspecs, entries) {
 	if (alias_type == USERALIAS) {
-	    if (!alias_rename_member_list(old_name, new_name, &us->users)) {
-		debug_return_bool(false);
-	    }
+	    alias_rename_member_list(old_name, new_name, &us->users);
 	}
 	TAILQ_FOREACH(priv, &us->privileges, entries) {
-	    if (!alias_rename_defaults(old_name, new_name, alias_type, &priv->defaults)) {
-		debug_return_bool(false);
-	    }
+	    alias_rename_defaults(old_name, new_name, alias_type, &priv->defaults);
 	    if (alias_type == HOSTALIAS) {
-		if (!alias_rename_member_list(old_name, new_name, &priv->hostlist)) {
-		    debug_return_bool(false);
-		}
+		alias_rename_member_list(old_name, new_name, &priv->hostlist);
 		continue;
 	    }
 	    TAILQ_FOREACH(cs, &priv->cmndlist, entries) {
 		if (alias_type == CMNDALIAS) {
-		    if (!alias_rename_member(old_name, new_name, cs->cmnd)) {
-			debug_return_bool(false);
-		    }
+		    alias_rename_member(old_name, new_name, cs->cmnd);
 		    continue;
 		}
 		if (alias_type == RUNASALIAS) {
 		    if (cs->runasuserlist != NULL) {
-			if (!alias_rename_member_list(old_name, new_name, cs->runasuserlist)) {
-			    debug_return_bool(false);
-			}
+			alias_rename_member_list(old_name, new_name, cs->runasuserlist);
 		    }
 		    if (cs->runasgrouplist != NULL) {
-			if (!alias_rename_member_list(old_name, new_name, cs->runasgrouplist)) {
-			    debug_return_bool(false);
-			}
+			alias_rename_member_list(old_name, new_name, cs->runasgrouplist);
 		    }
 		}
 	    }
 	}
     }
 
-    debug_return_bool(true);
+    debug_return_bool(ret);
 }
 
 /*
  * Rename an alias in parse_tree and all the places where it is used.
- * Takes ownership if new_name which must not be freed by the caller.
  */
 static bool
-alias_rename(const char *old_name, char *new_name, short alias_type,
-    struct sudoers_parse_tree *parse_tree)
+alias_rename(const char *old_name, const char *new_name,
+    short alias_type, struct sudoers_parse_tree *parse_tree)
 {
     struct alias_rename_closure closure = { old_name, new_name, alias_type };
     struct alias *a;
@@ -566,13 +543,14 @@ alias_rename(const char *old_name, char *new_name, short alias_type,
     if (a == NULL) {
 	/* Should not happen. */
 	sudo_warnx(U_("unable to find alias %s"), old_name);
-	free(new_name);
 	debug_return_bool(false);
     }
     log_warnx(U_("%s:%d:%d: renaming alias %s to %s"),
 	a->file, a->line, a->column, a->name, new_name);
     free(a->name);
-    a->name = new_name;
+    a->name = strdup(new_name);
+    if (a->name == NULL)
+	sudo_fatalx(U_("%s: %s"), __func__, U_("unable to allocate memory"));
     switch (rbinsert(parse_tree->aliases, a, NULL)) {
     case 0:
 	/* success */
@@ -581,26 +559,19 @@ alias_rename(const char *old_name, char *new_name, short alias_type,
 	/* Already present, should not happen. */
 	errno = EEXIST;
 	sudo_warn(U_("%s: %s"), __func__, a->name);
-	alias_free(a);
-	debug_return_bool(false);
 	break;
     default:
-	sudo_warnx(U_("%s: %s"), __func__, U_("unable to allocate memory"));
-	alias_free(a);
-	debug_return_bool(false);
+	sudo_fatalx(U_("%s: %s"), __func__, U_("unable to allocate memory"));
     }
 
     /* Rename it in the aliases tree itself (aliases can be nested). */
-    if (!alias_apply(parse_tree, alias_rename_members, &closure))
-	debug_return_bool(false);
+    alias_apply(parse_tree, alias_rename_members, &closure);
 
     /* Rename it in the Defaults list. */
-    if (!alias_rename_defaults(old_name, new_name, alias_type, &parse_tree->defaults))
-	debug_return_bool(false);
+    alias_rename_defaults(old_name, new_name, alias_type, &parse_tree->defaults);
 
     /* Rename it in the userspecs list. */
-    if (!alias_rename_userspecs(old_name, new_name, alias_type, &parse_tree->userspecs))
-	debug_return_bool(false);
+    alias_rename_userspecs(old_name, new_name, alias_type, &parse_tree->userspecs);
 
     debug_return_bool(true);
 }
@@ -639,10 +610,8 @@ alias_resolve_conflicts(struct sudoers_parse_tree *parse_tree0, struct alias *a,
 
 	/* Rename alias 'b' to avoid a naming conflict. */
 	new_name = alias_make_unique(a->name, a->type, parse_tree, merged_tree);
-	if (new_name == NULL)
-	    debug_return_int(-1);
-	if (!alias_rename(a->name, new_name, a->type, parse_tree))
-	    debug_return_int(-1);
+	alias_rename(a->name, new_name, a->type, parse_tree);
+	free(new_name);
     }
 
     /*
@@ -659,10 +628,9 @@ alias_resolve_conflicts(struct sudoers_parse_tree *parse_tree0, struct alias *a,
 	/* already present, should not happen. */
 	errno = EEXIST;
 	sudo_warn(U_("%s: %s"), __func__, a->name);
-	debug_return_int(-1);
+	break;
     default:
-	sudo_warnx(U_("%s: %s"), __func__, U_("unable to allocate memory"));
-	debug_return_int(-1);
+	sudo_fatalx(U_("%s: %s"), __func__, U_("unable to allocate memory"));
     }
 
     debug_return_int(0);
@@ -689,8 +657,7 @@ merge_aliases(struct sudoers_parse_tree_list *parse_trees,
 	 * Resolve any conflicts in alias names, renaming aliases as
 	 * needed and eliminating duplicates.
 	 */
-	if (!alias_apply(parse_tree, alias_resolve_conflicts, merged_tree))
-	    debug_return_bool(false);
+	alias_apply(parse_tree, alias_resolve_conflicts, merged_tree);
 
 	/*
 	 * Destroy the old alias tree without freeing the alias data
@@ -799,8 +766,7 @@ defaults_list_equivalent(struct defaults_list *dl1, struct defaults_list *dl2)
 enum cvtsudoers_conflict {
     CONFLICT_NONE,
     CONFLICT_RESOLVED,
-    CONFLICT_UNRESOLVED,
-    CONFLICT_ERROR
+    CONFLICT_UNRESOLVED
 };
 
 /*
@@ -840,15 +806,11 @@ defaults_check_conflict(struct defaults *def,
 			 */
 			if (d->type == DEFAULTS) {
 			    struct member *m = new_member(NULL, ALL);
-			    if (m == NULL)
-				debug_return_int(CONFLICT_ERROR);
 			    TAILQ_INSERT_TAIL(&d->binding->members, m, entries);
 			    d->type = def->type;
 			}
 			if (def->type == DEFAULTS) {
 			    struct member *m = new_member(NULL, ALL);
-			    if (m == NULL)
-				debug_return_int(CONFLICT_ERROR);
 			    TAILQ_INSERT_TAIL(&def->binding->members, m, entries);
 			    def->type = d->type;
 			}
@@ -899,8 +861,6 @@ merge_defaults(struct sudoers_parse_tree_list *parse_trees,
 	TAILQ_FOREACH(def, &parse_tree->defaults, entries) {
 	    if (parse_tree->lhost != NULL && def->type == DEFAULTS) {
 		m = new_member(parse_tree->lhost, WORD);
-		if (m == NULL)
-		    debug_return_bool(false);
 		log_warnx(U_("%s:%d:%d: made Defaults \"%s\" specific to host %s"),
 		    def->file, def->line, def->column, def->var,
 		    parse_tree->lhost);
@@ -933,10 +893,6 @@ merge_defaults(struct sudoers_parse_tree_list *parse_trees,
 		    def->file, def->line, def->column, def->var);
 		free_default(def);
 		break;
-	    default:
-		/* warning printed by defaults_check_conflict() */
-		free_default(def);
-		debug_return_bool(false);
 	    }
 	}
     }
@@ -947,10 +903,8 @@ merge_defaults(struct sudoers_parse_tree_list *parse_trees,
     TAILQ_FOREACH(def, &merged_tree->defaults, entries) {
 	/* TODO: handle refcnt != 1 */
 	if (def->type == DEFAULTS_HOST && def->binding->refcnt == 1) {
-	    if (!simplify_host_list(&def->binding->members, def->file,
-		    def->line, def->column, bound_hosts)) {
-		debug_return_bool(false);
-	    }
+	    simplify_host_list(&def->binding->members, def->file, def->line,
+		def->column, bound_hosts);
 	    m = TAILQ_FIRST(&def->binding->members);
 	    if (m->type == ALL && !m->negated) {
 		if (TAILQ_NEXT(m, entries) == NULL) {
@@ -1197,14 +1151,12 @@ merge_userspecs(struct sudoers_parse_tree_list *parse_trees,
 		TAILQ_FOREACH(m, &priv->hostlist, entries) {
 		    /* We don't alter !ALL in a hostlist (XXX - should we?). */
 		    if (m->type == ALL && !m->negated) {
-			char *copy = strdup(parse_tree->lhost);
-			if (copy == NULL) {
-			    sudo_warnx(U_("%s: %s"), __func__,
-				U_("unable to allocate memory"));
-			    debug_return_bool(false);
-			}
 			m->type = WORD;
-			m->name = copy;
+			m->name = strdup(parse_tree->lhost);
+			if (m->name == NULL) {
+			    sudo_fatalx(U_("%s: %s"), __func__,
+				U_("unable to allocate memory"));
+			}
 		    }
 		}
 	    }
@@ -1231,10 +1183,6 @@ merge_userspecs(struct sudoers_parse_tree_list *parse_trees,
 		    us->file, us->line, us->column);
 		free_userspec(us);
 		break;
-	    default:
-		/* warning printed by defaults_check_conflict() */
-		free_userspec(us);
-		debug_return_bool(false);
 	    }
 	}
     }
@@ -1247,10 +1195,8 @@ merge_userspecs(struct sudoers_parse_tree_list *parse_trees,
     TAILQ_FOREACH_REVERSE(us, &merged_tree->userspecs, userspec_list, entries) {
 	TAILQ_FOREACH_REVERSE(priv, &us->privileges, privilege_list, entries) {
 	    /* TODO: simplify other lists? */
-	    if (!simplify_host_list(&priv->hostlist, us->file, us->line,
-		    us->column, bound_hosts)) {
-		debug_return_bool(false);
-	    }
+	    simplify_host_list(&priv->hostlist, us->file, us->line, us->column,
+		bound_hosts);
 	}
     }
 
@@ -1277,16 +1223,12 @@ merge_sudoers(struct sudoers_parse_tree_list *parse_trees,
     if (parse_tree == NULL) {
 	TAILQ_FOREACH(parse_tree, parse_trees, entries) {
 	    struct member *m = new_member(parse_tree->lhost, WORD);
-	    if (m == NULL)
-		goto bad;
 	    TAILQ_INSERT_TAIL(&bound_hosts, m, entries);
 	}
     }
 
-    if ((merged_tree->aliases = alloc_aliases()) == NULL) {
-	sudo_warnx(U_("%s: %s"), __func__, U_("unable to allocate memory"));
-	goto bad;
-    }
+    if ((merged_tree->aliases = alloc_aliases()) == NULL)
+	sudo_fatalx(U_("%s: %s"), __func__, U_("unable to allocate memory"));
 
     if (!merge_aliases(parse_trees, merged_tree))
 	goto bad;

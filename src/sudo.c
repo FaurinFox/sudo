@@ -507,9 +507,8 @@ static char **
 get_user_info(struct user_details *ud)
 {
     char *cp, **info, path[PATH_MAX];
-    size_t info_max = 33 + RLIM_NLIMITS;
+    size_t info_max = 32 + RLIM_NLIMITS;
     size_t i = 0, n;
-    dev_t ttydev;
     mode_t mask;
     struct passwd *pw;
     int ttyfd;
@@ -618,10 +617,7 @@ get_user_info(struct user_details *ud)
 	ud->cwd = info[i] + sizeof("cwd=") - 1;
     }
 
-    ttydev = get_process_ttyname(path, sizeof(path));
-    if (ttydev != (dev_t)-1) {
-	if (asprintf(&info[++i], "ttydev=%llu", (unsigned long long)ttydev) == -1)
-	    goto oom;
+    if (get_process_ttyname(path, sizeof(path)) != NULL) {
 	info[++i] = sudo_new_key_val("tty", path);
 	if (info[i] == NULL)
 	    goto oom;

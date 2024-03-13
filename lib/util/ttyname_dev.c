@@ -29,6 +29,8 @@
 # include <sys/mkdev.h>
 #elif defined(MAJOR_IN_SYSMACROS)
 # include <sys/sysmacros.h>
+#else
+# include <sys/param.h>
 #endif
 #include <stdio.h>
 #include <stdlib.h>

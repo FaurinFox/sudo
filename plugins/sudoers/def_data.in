@@ -91,13 +91,13 @@ env_editor
 	"Visudo will honor the EDITOR environment variable"
 rootpw
 	T_FLAG
-	"Prompt for root's password, not the user's"
+	"Prompt for root's password, not the users's"
 runaspw
 	T_FLAG
-	"Prompt for the runas_default user's password, not the user's"
+	"Prompt for the runas_default user's password, not the users's"
 targetpw
 	T_FLAG
-	"Prompt for the target user's password, not the user's"
+	"Prompt for the target user's password, not the users's"
 use_loginclass
 	T_FLAG
 	"Apply defaults in the target user's login class if there is one"
@@ -426,7 +426,7 @@ runchroot
 log_format
 	T_TUPLE
 	"The format of logs to produce: %s"
-	sudo json json_compact json_pretty
+	sudo json
 selinux
 	T_FLAG
 	"Enable SELinux RBAC support"
@@ -500,6 +500,3 @@ intercept_verify
 apparmor_profile
 	T_STR
 	"AppArmor profile to use in the new security context: %s"
-cmddenial_message
-	T_STR
-	"Command denial message: %s"

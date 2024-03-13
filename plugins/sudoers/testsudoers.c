@@ -715,7 +715,9 @@ print_aliases(struct sudo_lbuf *lbuf)
 {
     debug_decl(print_aliases, SUDOERS_DEBUG_UTIL);
 
-    debug_return_bool(alias_apply(&parsed_policy, print_alias, lbuf));
+    alias_apply(&parsed_policy, print_alias, lbuf);
+
+    debug_return_bool(!sudo_lbuf_error(lbuf));
 }
 
 static void

@@ -348,26 +348,22 @@ add_timestamp(struct json_container *jsonc, struct timespec *ts)
     if (gmtime_r(&secs, &gmt) == NULL)
 	debug_return_bool(false);
 
-    if (!sudo_json_open_object(jsonc, "timestamp"))
-	debug_return_bool(false);
+    sudo_json_open_object(jsonc, "timestamp");
 
     json_value.type = JSON_NUMBER;
     json_value.u.number = ts->tv_sec;
-    if (!sudo_json_add_value(jsonc, "seconds", &json_value))
-	debug_return_bool(false);
+    sudo_json_add_value(jsonc, "seconds", &json_value);
 
     json_value.type = JSON_NUMBER;
     json_value.u.number = ts->tv_nsec;
-    if (!sudo_json_add_value(jsonc, "nanoseconds", &json_value))
-	debug_return_bool(false);
+    sudo_json_add_value(jsonc, "nanoseconds", &json_value);
 
     timebuf[sizeof(timebuf) - 1] = '\0';
     len = strftime(timebuf, sizeof(timebuf), "%Y%m%d%H%M%SZ", &gmt);
     if (len != 0 && timebuf[sizeof(timebuf) - 1] == '\0'){
 	json_value.type = JSON_STRING;
 	json_value.u.string = timebuf;
-	if (!sudo_json_add_value(jsonc, "iso8601", &json_value))
-	    debug_return_bool(false);
+	sudo_json_add_value(jsonc, "iso8601", &json_value);
     }
 
     timebuf[sizeof(timebuf) - 1] = '\0';
@@ -375,12 +371,10 @@ add_timestamp(struct json_container *jsonc, struct timespec *ts)
     if (len != 0 && timebuf[sizeof(timebuf) - 1] == '\0'){
 	json_value.type = JSON_STRING;
 	json_value.u.string = timebuf;
-	if (!sudo_json_add_value(jsonc, "localtime", &json_value))
-	    debug_return_bool(false);
+	sudo_json_add_value(jsonc, "localtime", &json_value);
     }
 
-    if (!sudo_json_close_object(jsonc))
-	debug_return_bool(false);
+    sudo_json_close_object(jsonc);
 
     debug_return_bool(true);
 }

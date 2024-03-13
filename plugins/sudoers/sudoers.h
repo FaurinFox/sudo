@@ -24,7 +24,7 @@
 #ifndef SUDOERS_SUDOERS_H
 #define SUDOERS_SUDOERS_H
 
-#include <sys/types.h>		/* dev_t, gid_t, mode_t, pid_t, size_t, uid_t */
+#include <sys/types.h>		/* for gid_t, mode_t, pid_t, size_t, uid_t */
 #include <limits.h>
 #ifdef HAVE_STDBOOL_H
 # include <stdbool.h>
@@ -142,7 +142,6 @@ struct sudoers_user_context {
     int   lines;
     int   cols;
     int   timeout;
-    dev_t ttydev;
     mode_t umask;
     uid_t euid;
     uid_t uid;
@@ -195,7 +194,7 @@ struct sudoers_context {
     struct sudoers_plugin_settings settings;
     struct sudoers_user_context user;
     struct sudoers_runas_context runas;
-    struct timespec start_time;
+    struct timespec submit_time;
     char *source;
     char *iolog_file;
     char *iolog_dir;
@@ -315,6 +314,7 @@ struct sudoers_context {
 struct sudo_lbuf;
 struct passwd;
 struct stat;
+struct timespec;
 
 /*
  * Function prototypes
@@ -459,7 +459,6 @@ void sudoers_cleanup(void);
 bool sudoers_override_umask(void);
 const struct sudoers_context *sudoers_get_context(void);
 bool sudoers_set_mode(unsigned int flags, unsigned int mask);
-bool sudoers_set_log_format(enum def_tuple tuple);
 
 /* sudoers_ctx_free.c */
 void sudoers_ctx_free(struct sudoers_context *ctx);

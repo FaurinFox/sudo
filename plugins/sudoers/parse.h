@@ -240,7 +240,7 @@ struct cmndspec {
     struct member_list *runasuserlist;	/* list of runas users */
     struct member_list *runasgrouplist;	/* list of runas groups */
     struct member *cmnd;		/* command to allow/deny */
-    struct cmndtag tags;		/* tag specification */
+    struct cmndtag tags;		/* tag specificaion */
     int timeout;			/* command timeout */
     time_t notbefore;			/* time restriction */
     time_t notafter;			/* time restriction */
@@ -388,7 +388,7 @@ const char *alias_type_to_string(short alias_type);
 struct alias *alias_get(const struct sudoers_parse_tree *parse_tree, const char *name, short type);
 struct alias *alias_remove(struct sudoers_parse_tree *parse_tree, const char *name, short type);
 bool alias_find_used(struct sudoers_parse_tree *parse_tree, struct rbtree *used_aliases);
-bool alias_apply(struct sudoers_parse_tree *parse_tree, int (*func)(struct sudoers_parse_tree *, struct alias *, void *), void *cookie);
+void alias_apply(struct sudoers_parse_tree *parse_tree, int (*func)(struct sudoers_parse_tree *, struct alias *, void *), void *cookie);
 void alias_free(void *a);
 void alias_put(struct alias *a);
 

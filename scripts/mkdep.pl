@@ -156,7 +156,7 @@ sub mkdep {
     #$dir_vars{'top_builddir'} = '.';
     $dir_vars{'incdir'} = 'include';
 
-    # Find implicit rules for generated .i, .lo, .o and .plog files
+    # Find implicit rules for generated .o and .lo files
     %implicit = ();
     while ($makefile =~ /^\.[ci]\.(l?o|i|plog):\s*\n\t+(.*)$/mg) {
 	$implicit{$1} = $2;
@@ -214,6 +214,7 @@ sub mkdep {
 
 	    # PVS Studio files (.i and .plog) but only do them once.
 	    if ($ext ne "o" || !exists($objs{"$base.lo"})) {
+		$imp = $implicit{"i"};
 		if (exists $implicit{"i"} && exists $implicit{"plog"}) {
 		    if ($src =~ /\.pb-c.c$/) {
 			# Do not check protobuf-c generated files
@@ -222,7 +223,6 @@ sub mkdep {
 			$new_makefile .= "\ttouch \$@\n";
 		    } else {
 			$imp = $implicit{"i"};
-			$imp =~ s/\$</$src/g;
 			$deps =~ s/\.l?o/.i/;
 			$new_makefile .= $deps;
 			$new_makefile .= "\t$imp\n";
@@ -231,9 +231,7 @@ sub mkdep {
 			$imp =~ s/ifile=\$<; *//;
 			$imp =~ s/\$\$\{ifile\%i\}c/$src/;
 			$obj =~ /(.*)\.[a-z]+$/;
-			my $base = $1;
-			$imp =~ s/\$</${base}.i/g;
-			$new_makefile .= "${base}.plog: ${base}.i\n";
+			$new_makefile .= "${1}.plog: ${1}.i\n";
 			$new_makefile .= "\t$imp\n";
 		    }
 		}

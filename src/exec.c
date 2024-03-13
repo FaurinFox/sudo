@@ -84,7 +84,7 @@ close_fds(struct command_details *details, int errfd, int intercept_fd)
 }
 
 /*
- * Set up the execution environment immediately prior to the call to execve().
+ * Setup the execution environment immediately prior to the call to execve().
  * Group setup is performed by policy_init_session(), called earlier.
  * Returns true on success and false on failure.
  */
@@ -253,7 +253,7 @@ done:
 }
 
 /*
- * Set up the execution environment and execute the command.
+ * Setup the execution environment and execute the command.
  * If SELinux is enabled, run the command via sesh, otherwise
  * execute it directly.
  * If the exec fails, cstat is filled in with the value of errno.

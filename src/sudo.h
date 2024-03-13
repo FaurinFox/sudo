@@ -316,8 +316,7 @@ char *getenv_unhooked(const char *name);
 /* interfaces.c */
 int get_net_ifs(char **addrinfo);
 
-/* ttyname.c */
-dev_t get_process_ttyname(char *name, size_t namelen);
+char *get_process_ttyname(char *name, size_t namelen);
 
 /* signal.c */
 struct sigaction;

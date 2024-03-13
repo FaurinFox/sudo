@@ -15,7 +15,7 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd November 26, 2023
+.Dd September 20, 2023
 .Dt SUDOERS_TIMESTAMP @mansectform@
 .Os Sudo @PACKAGE_VERSION@
 .Sh NAME
@@ -58,14 +58,14 @@ number and a 16-bit record size.
 Time stamp records have the following structure:
 .Bd -literal
 /* Time stamp entry types */
-#define TS_GLOBAL               0x01U   /* not restricted by tty or ppid */
-#define TS_TTY                  0x02U   /* restricted by tty */
-#define TS_PPID                 0x03U   /* restricted by ppid */
-#define TS_LOCKEXCL             0x04U   /* special lock record */
+#define TS_GLOBAL               0x01    /* not restricted by tty or ppid */
+#define TS_TTY                  0x02    /* restricted by tty */
+#define TS_PPID                 0x03    /* restricted by ppid */
+#define TS_LOCKEXCL             0x04    /* special lock record */
 
 /* Time stamp flags */
-#define TS_DISABLED             0x01U   /* entry disabled */
-#define TS_ANYUID               0x02U   /* ignore uid, only valid in key */
+#define TS_DISABLED             0x01    /* entry disabled */
+#define TS_ANYUID               0x02    /* ignore uid, only valid in key */
 
 struct timestamp_entry {
     unsigned short version;     /* version number */
@@ -162,13 +162,6 @@ records of type
 The ID of the parent process for records of type
 .Dv TS_PPID .
 .El
-.Pp
-The
-.Nm tsdump
-utility, included with the sudo source distribution, can be used to
-display the contents of a
-.Em sudoers
-time stamp file.
 .Sh LOCKING
 In
 .Nm sudoers

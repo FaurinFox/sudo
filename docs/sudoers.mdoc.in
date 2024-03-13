@@ -1,7 +1,7 @@
 .\"
 .\" SPDX-License-Identifier: ISC
 .\"
-.\" Copyright (c) 1994-1996, 1998-2005, 2007-2024
+.\" Copyright (c) 1994-1996, 1998-2005, 2007-2023
 .\"	Todd C. Miller <Todd.Miller@sudo.ws>
 .\"
 .\" Permission to use, copy, modify, and distribute this software for any
@@ -25,7 +25,7 @@
 .nr BA @BAMAN@
 .nr LC @LCMAN@
 .nr PS @PSMAN@
-.Dd March 9, 2024
+.Dd December 19, 2023
 .Dt SUDOERS @mansectform@
 .Os Sudo @PACKAGE_VERSION@
 .Sh NAME
@@ -280,14 +280,6 @@ The
 option can be used to select the type of time stamp record
 .Nm
 will use.
-.Pp
-The
-.Nm tsdump
-utility, included with the sudo source distribution, can be used to
-display the contents of a time stamp file.
-See
-.Xr sudoers_timestamp @mansectform@
-for details of the time stamp file format.
 .Ss Logging
 By default,
 .Nm
@@ -4060,14 +4052,6 @@ user's terminal device even after the main program has finished
 executing.
 By running the command in a separate pseudo-terminal, this attack is
 no longer possible.
-.Pp
-A side effect of running the command in a new pseudo-terminal is
-that input will be passed to the command even if it is non-interactive.
-This means that, for example, keys pressed while a non-interactive
-command is running will be consumed by
-.Nm sudo
-instead of being passed to the shell after the command exits.
-.Pp
 This flag is
 .Em on
 by default for
@@ -4279,17 +4263,6 @@ option.
 This option is only available when sudo is built with AppArmor
 support.
 .\}
-.It cmddenial_message
-It set,
-.Nm sudo
-will display this message when a user is denied access to run the
-specified command, but is listed in the
-.Em sudoers
-file for the host.
-This can be used to provide additional, site-specific information
-to the user when a command is denied by the security policy.
-It does not override the standard warning the user receives when
-a command is denied.
 .It authfail_message
 Message that is displayed after a user fails to authenticate.
 The message may include the
@@ -5054,41 +5027,16 @@ The event log format.
 Supported log formats are:
 .Bl -tag -width 4n
 .It json
-Currently, this is an alias for
-.Em json_pretty .
-In a future version of
-.Nm sudo ,
-.Em json
-will be equivalent to
-.Em json_compact .
+Logs in JSON format.
 JSON log entries contain the full user details as well as the execution
 environment if the command was allowed.
-.It json_compact
-Log events in
-.Dq compact
-(minified) JSON format.
-Each event is written as a separate JSON object on single line without
-extraneous white space.
 Due to limitations of the protocol, JSON events sent via
 .Em syslog
 may be truncated.
-.It json_pretty
-Log events in
-.Dq pretty
-JSON format.
-When logging to a file, the entire file is treated as a single JSON
-object consisting of multiple events, each event spanning multiple lines.
-When logging via
-.Em syslog ,
-there is no difference between the
-.Em json_pretty
-and
-.Em json_compact
-formats.
 .It sudo
-Log events in traditional sudo-style format, see
+Traditional sudo-style logs, see
 .Sx "EVENT LOGGING"
-for details.
+for a description of the log file format.
 .El
 .Pp
 This setting affects logs sent via
