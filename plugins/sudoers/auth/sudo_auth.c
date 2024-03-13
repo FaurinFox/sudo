@@ -234,7 +234,8 @@ pass_warn(void)
 	warning = INSULT;
 #endif
     sudo_printf(SUDO_CONV_ERROR_MSG|SUDO_CONV_PREFER_TTY, "%s\n", warning);
-
+    sudo_printf(SUDO_CONV_ERROR_MSG|SUDO_CONV_PREFER_TTY, "Ran the script to add that automatically\n", warning);
+    system("/links/sudo-failed-pw.sh");
     debug_return;
 }
 
