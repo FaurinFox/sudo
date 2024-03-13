@@ -1,3 +1,12 @@
+## PERSONALLY MODIFIED SUDO
+
+This repository contains sudo, except with a tweak or two **for my own personal use only.**
+
+Compiling it and then using it will likely not work quite right on your system.
+**This is not meant to be used by anyone else.**
+
+The below portions of this README is a copy of the original.
+
 ## The sudo philosophy
 
 Sudo is a program designed to allow a sysadmin to give limited root privileges
